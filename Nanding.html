@@ -10,48 +10,47 @@
         body{
             background: url("xgcbbb.jpg") no-repeat center center;
             background-size: cover;
+            background-attachment: fixed;
             color:#333;
             padding:40px 20px;
-            position:relative;
             min-height:100vh;
         }
-        /* 水印容器 */
+        /* 水印：放在最底层，不能盖住内容！z-index调低 */
         #watermark{
             position:fixed;
             top:0;left:0;width:100vw;height:100vh;
             pointer-events:none;
-            z-index:9999;
+            z-index:0;
             background-repeat:repeat;
         }
-        .container{max-width:800px;margin:0 auto;position:relative;z-index:1;}
+        .container{max-width:800px;margin:0 auto;position:relative;z-index:2;}
         header{text-align:center;margin-bottom:50px;}
-        /* 主标题 YouFanwokuangchi：Times New Roman，白色 */
         h1{
             font-weight:normal;
             letter-spacing:3px;
             color:#ffffff;
             font-family:"Times New Roman",serif;
+            text-shadow: 0 0 6px rgba(0,0,0,0.4);
         }
-        /* 副标题 请大家吃好喝好：微软雅黑，白色 */
         .desc{
             margin-top:12px;
             color:#ffffff;
             font-size:15px;
             font-family:"Microsoft YaHei",sans-serif;
+            text-shadow: 0 0 4px rgba(0,0,0,0.4);
         }
         .article-item{
-            background:#fff;
-            padding:24px;
+            background:rgba(255,255,255,0.92); /* 半透白卡片，能透出背景图！原来纯白完全挡住背景 */
+            padding:28px;
             border-radius:12px;
             margin-bottom:20px;
-            box-shadow:0 2px 8px rgba(0,0,0,0.06);
+            box-shadow:0 4px 14px rgba(0,0,0,0.12);
         }
         .article-title{font-size:24px;margin-bottom:12px;}
         .article-tag{
             display:inline-block;background:#e9ecef;padding:3px 10px;border-radius:20px;font-size:13px;color:#555;margin-bottom:16px;
         }
         .article-intro{color:#555;line-height:1.6;margin-bottom:20px;}
-        /* 故事正文：宋体 */
         .article-content{
             line-height:1.8;
             font-family:"SimSun",serif;
@@ -60,7 +59,7 @@
     </style>
 </head>
 <body>
-    <!-- 水印层 -->
+    <!-- 水印层（底层） -->
     <div id="watermark"></div>
     <div class="container">
         <header>
@@ -75,10 +74,12 @@
         </div>
     </div>
 <script>
-// ============【在这里写你的小故事！！】============
-// 直接打字，回车换行就是新段落，不用任何标签！
+marked.setOptions({
+    breaks: true, // 回车直接换行，解决markdown换行失效！这个就是你格式不对最大原因
+});
+
 const storyMarkdown = `
-　　　　　　1.
+　　1.
 
 　　“Pooh！下节还有课呢你干嘛去？”
 
@@ -294,35 +295,34 @@ const storyMarkdown = `
 
 　　还是总裁低估了男大的能力，看来没有他的惩罚，年轻人也会把他伺候得很舒服。
 `;
-// ==============================================
 
-// 将markdown转成网页正文
 document.getElementById('story').innerHTML = marked.parse(storyMarkdown);
 
-        // 水印生成代码
-        function createWatermark(text="YouFanwokuangchi"){
-            const watermarkDom = document.getElementById('watermark');
-            const canvas = document.createElement('canvas');
-            canvas.width = 220;
-            canvas.height = 160;
-            const ctx = canvas.getContext('2d');
-            ctx.rotate(-20*Math.PI/180);
-            ctx.font = "16px sans-serif";
-            ctx.fillStyle = "rgba(180,180,180,0.35)";
-            ctx.fillText(text, 20, 100);
-            watermarkDom.style.backgroundImage = `url(${canvas.toDataURL()})`;
-        }
+// 水印
+function createWatermark(text="YouFanwokuangchi"){
+    const watermarkDom = document.getElementById('watermark');
+    const canvas = document.createElement('canvas');
+    canvas.width = 220;
+    canvas.height = 160;
+    const ctx = canvas.getContext('2d');
+    ctx.rotate(-20*Math.PI/180);
+    ctx.font = "16px sans-serif";
+    ctx.fillStyle = "rgba(180,180,180,0.35)";
+    ctx.fillText(text, 20, 100);
+    watermarkDom.style.backgroundImage = `url(${canvas.toDataURL()})`;
+}
+createWatermark("YouFanwokuangchi");
+
+// 防删除水印
+const observer = new MutationObserver(()=>{
+    if(!document.getElementById("watermark")){
+        const wm = document.createElement("div");
+        wm.id="watermark";
+        document.body.insertBefore(wm, document.body.firstChild);
         createWatermark("YouFanwokuangchi");
-        // 防删除水印监听
-        const observer = new MutationObserver(()=>{
-            if(!document.getElementById("watermark")){
-                const wm = document.createElement("div");
-                wm.id="watermark";
-                document.body.appendChild(wm);
-                createWatermark("YouFanwokuangchi");
-            }
-        });
-        observer.observe(document.body,{childList:true,subtree:true});
+    }
+});
+observer.observe(document.body,{childList:true,subtree:true});
 </script>
 </body>
 </html>
